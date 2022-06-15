@@ -1,21 +1,45 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import { Header } from '../components/Header';
 import { Task, TasksList } from '../components/TasksList';
 import { TodoInput } from '../components/TodoInput';
 
 export function Home() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);   
 
   function handleAddTask(newTaskTitle: string) {
+    const existingTask = tasks.find(task => task.title === newTaskTitle)
+
+    if(existingTask) {
+      return (
+        Alert.alert(
+          "Task já cadastrada",
+          "Você não pode cadastrar uma task com o mesmo nome",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+            },
+          ],
+          {
+            cancelable: true,
+            onDismiss: () =>
+              Alert.alert(
+                "This alert was dismissed by tapping outside of the alert dialog."
+              ),
+          }
+        )
+      )
+    }
+
     const newTask = {
       id: new Date().getTime(),
       title: newTaskTitle,
       done: false
     }
 
-    setTasks(oldState => [...oldState, newTask])
+    setTasks([...tasks, newTask])
   }
 
   function handleToggleTaskDone(id: number) {
@@ -32,9 +56,45 @@ export function Home() {
   }
 
   function handleRemoveTask(id: number) {
-    setTasks(oldState => oldState.filter(
-      task => task.id !== id
-    ))
+    Alert.alert(
+      "Remover item",
+      "Tem certeza que você deseja remover esse item?",
+      [
+        {
+          text: "Sim",
+          onPress: () => {
+            setTasks(oldState => oldState.filter(
+              task => task.id !== id
+            ))
+          },
+          style: "default",
+        },
+        {
+          text: "Não",
+          style: "cancel",
+        },
+      ],
+      {
+        cancelable: true,
+        onDismiss: () =>
+          Alert.alert(
+            "This alert was dismissed by tapping outside of the alert dialog."
+          ),
+      }
+    )
+  }
+
+  function handleEditTask(taskId: number, taskNewTitle: string) {
+    const updatedTasks = [...tasks]
+
+    const item = updatedTasks.find(task => task.id === taskId)
+
+    if(!item) {
+      return
+    }
+
+    item.title = taskNewTitle
+    setTasks(updatedTasks)
   }
 
   return (
@@ -46,7 +106,8 @@ export function Home() {
       <TasksList 
         tasks={tasks} 
         toggleTaskDone={handleToggleTaskDone}
-        removeTask={handleRemoveTask} 
+        removeTask={handleRemoveTask}
+        editTask={handleEditTask}
       />
     </View>
   )
